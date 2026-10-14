@@ -93,7 +93,7 @@ button{font:inherit;border-radius:12px;border:0;padding:13px 16px;cursor:pointer
   <button class="home-btn" id="goHisto"><span class="ico">📋</span><span>Interventions <span id="bInter"></span><small>Brouillons, à envoyer, envoyées</small></span></button>
   <button class="home-btn" id="goAppels"><span class="ico">💶</span><span>Appels à facturer <span id="bAppels"></span><small>Préparer les brouillons de facture</small></span></button>
   <button class="home-btn" id="goReglages"><span class="ico">⚙️</span><span>Réglages<small>Émetteur, tarifs, listes clients et articles</small></span></button>
-  <p class="muted" style="text-align:center">TechSO Terrain v1.1 — données stockées sur cet appareil uniquement.<br>Aucun numéro de BI ni de facture n'est créé ici : Docs Pro numérote à la sauvegarde.</p>
+  <p class="muted" style="text-align:center">TechSO Terrain v1.2 — données stockées sur cet appareil uniquement.<br>Aucun numéro de BI ni de facture n'est créé ici : Docs Pro numérote à la sauvegarde.</p>
 </section>
 
 <!-- ============ INTERVENTION ============ -->
@@ -294,7 +294,7 @@ button{font:inherit;border-radius:12px;border:0;padding:13px 16px;cursor:pointer
 /* ================= OUTILS ================= */
 const $ = (q, el=document) => el.querySelector(q);
 const $$ = (q, el=document) => Array.from(el.querySelectorAll(q));
-const APP_VERSION = 'TechSO Terrain v1.1';
+const APP_VERSION = 'TechSO Terrain v1.2';
 const IS_MOBILE = /Android|iPhone|iPad|Mobile/i.test(navigator.userAgent);
 const z = n => String(n).padStart(2,'0');
 const todayStr = () => { const d=new Date(); return d.getFullYear()+'-'+z(d.getMonth()+1)+'-'+z(d.getDate()); };
@@ -597,7 +597,7 @@ $('#i_send').onclick = async ()=>{
   try{
     const files=[ makeReportPDF(cur), makeBIDraft(cur) ];
     const ok = await shareFiles(files, `Intervention ${cur.client.name} du ${fmtDate(cur.date)}`,
-      `Rapport d'intervention + brouillon de BI à importer dans Docs Pro (Historique → Importer).`);
+      `Rapport d'intervention + brouillon de BI à importer dans Docs Pro (bouton ⬇️ Importer de la barre du haut).`);
     if(ok){ cur.statut='envoye'; cur.envoyeLe=new Date().toISOString(); persistCur(); rememberClient(cur.client); applyLock(); toast('✅ Fichiers transmis. Intervention verrouillée.'); }
   }catch(e){ console.error(e); toast('Erreur : '+(e.message||e)); }
 };
@@ -744,7 +744,7 @@ async function shareFiles(files, title, text){
   files.forEach(f=>{ const a=document.createElement('a'); a.href=URL.createObjectURL(f); a.download=f.name; document.body.appendChild(a); a.click(); setTimeout(()=>{URL.revokeObjectURL(a.href); a.remove();},4000); });
   return confirm(IS_MOBILE
     ? 'Partage direct indisponible : les fichiers ont été téléchargés. Les marquer comme envoyés ?'
-    : 'Fichier(s) enregistré(s) dans Téléchargements : importe-les dans Docs Pro (Historique → Importer).\n\nLes marquer comme envoyés ?');
+    : 'Fichier(s) enregistré(s) dans Téléchargements : importe-les dans Docs Pro (bouton ⬇️ Importer de la barre du haut).\n\nLes marquer comme envoyés ?');
 }
 
 /* ================= ASSISTANCE TÉLÉPHONIQUE ================= */
@@ -799,7 +799,7 @@ async function facturerAppels(arr){
     { appels:sorted.map(a=>({id:a.id, date:a.date, dureeMin:a.dureeMin, appelant:a.appelant, tarifAnnonce:a.tarifAnnonce, accepteePar:a.accepteePar})) });
   const f=jsonFile(d,'FA',c.name);
   try{
-    const ok=await shareFiles([f], `Brouillon facture assistance - ${c.name}`, `Brouillon de facture à importer dans Docs Pro (Historique → Importer). Le numéro FA sera attribué à la sauvegarde.`);
+    const ok=await shareFiles([f], `Brouillon facture assistance - ${c.name}`, `Brouillon de facture à importer dans Docs Pro (bouton ⬇️ Importer de la barre du haut). Le numéro FA sera attribué à la sauvegarde.`);
     if(ok){ const all=load(KEYS.appels,[]); const ids=new Set(arr.map(a=>a.id)); const now=new Date().toISOString(); all.forEach(a=>{ if(ids.has(a.id)){ a.statut='facture'; a.factureLe=now; a.fichier=f.name; } }); save(KEYS.appels,all); renderAppels(); toast('✅ Brouillon de facture transmis.'); }
   }catch(e){ console.error(e); toast('Erreur : '+(e.message||e)); }
 }
