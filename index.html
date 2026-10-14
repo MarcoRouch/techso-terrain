@@ -1,0 +1,884 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#161616">
+<title>TechSO Terrain</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<style>
+:root{
+  --noir:#161616; --or:#D0A147; --texte:#242424; --gris:#555; --ligne:#d9d9d9;
+  --fond:#f4f4f4; --carte:#fff; --rouge:#D64550; --rougeF:#F8D7DA; --jaune:#E0A800; --jauneF:#FFF3CD; --vert:#2e7d32;
+}
+*{box-sizing:border-box}
+html,body{overflow-x:hidden;margin:0;background:var(--fond);color:var(--texte);font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;font-size:17px;-webkit-text-size-adjust:100%}
+header.bar{position:sticky;top:0;z-index:5;background:var(--noir);color:#fff;display:flex;align-items:center;gap:10px;padding:10px 14px;padding-top:calc(10px + env(safe-area-inset-top));border-bottom:3px solid var(--or)}
+header.bar h1{font-size:18px;margin:0;flex:1;letter-spacing:.3px}
+header.bar button.back{background:none;border:0;color:var(--or);font-size:26px;padding:0 6px;line-height:1}
+main{padding:14px 14px 110px;max-width:720px;margin:0 auto}
+section.screen{display:none}
+section.screen.on{display:block}
+.card{background:var(--carte);border-radius:14px;padding:14px;margin:0 0 14px;box-shadow:0 1px 3px rgba(0,0,0,.08)}
+.card h2{font-size:15px;text-transform:uppercase;letter-spacing:.6px;margin:0 0 10px;color:var(--noir);border-bottom:2px solid var(--or);padding-bottom:6px}
+label{display:block;margin:0 0 10px;font-size:14px;color:var(--gris)}
+label>span{display:block;margin-bottom:4px}
+input,select,textarea{width:100%;font:inherit;color:var(--texte);border:1px solid var(--ligne);border-radius:10px;padding:11px 12px;background:#fff}
+input:focus,select:focus,textarea:focus{outline:2px solid var(--or);border-color:var(--or)}
+textarea{min-height:84px;resize:vertical}
+input:disabled,select:disabled,textarea:disabled{background:#f0f0f0;color:#555}
+.row2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.row3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.row2>*,.row3>*{min-width:0}
+input[type=date],input[type=time],input[type=datetime-local]{min-width:0;padding-left:8px;padding-right:6px}
+button{font:inherit;border-radius:12px;border:0;padding:13px 16px;cursor:pointer}
+.btn{background:#fff;border:1px solid var(--ligne);color:var(--texte)}
+.btn-or{background:var(--or);color:var(--noir);font-weight:700}
+.btn-noir{background:var(--noir);color:#fff;font-weight:600}
+.btn-rouge{background:#fff;border:1px solid var(--rouge);color:var(--rouge)}
+.btn-block{display:block;width:100%;margin:0 0 10px}
+.btn-sm{padding:8px 12px;font-size:14px}
+.home-btn{display:flex;align-items:center;gap:14px;width:100%;text-align:left;background:var(--carte);border:0;border-left:6px solid var(--or);border-radius:14px;padding:18px 16px;margin:0 0 12px;box-shadow:0 1px 3px rgba(0,0,0,.08);font-size:18px;font-weight:600;color:var(--noir)}
+.home-btn small{display:block;font-weight:400;font-size:14px;color:var(--gris);margin-top:2px}
+.home-btn .ico{font-size:28px}
+.badge{display:inline-block;min-width:24px;padding:2px 8px;border-radius:12px;background:var(--rouge);color:#fff;font-size:13px;font-weight:700;text-align:center}
+.badge.ok{background:var(--vert)}
+.badge.warn{background:var(--jaune);color:#161616}
+.badge.gris{background:#888}
+.muted{color:var(--gris);font-size:14px}
+.alert{border-left:5px solid var(--jaune);background:var(--jauneF);padding:10px 12px;border-radius:8px;font-size:14px;margin:0 0 12px}
+.alert.rouge{border-color:var(--rouge);background:var(--rougeF)}
+.suggest{border:1px solid var(--ligne);border-radius:10px;margin-top:-6px;margin-bottom:10px;max-height:260px;overflow:auto;background:#fff}
+.suggest div{padding:10px 12px;border-bottom:1px solid #eee;font-size:15px}
+.suggest div small{color:var(--gris)}
+.suggest div:active{background:#f7efe0}
+.line{border:1px solid var(--ligne);border-radius:12px;padding:10px;margin:0 0 10px;background:#fcfcfc}
+.line .top{display:flex;gap:8px;align-items:center;margin-bottom:8px}
+.line .top input{flex:1}
+.line .del{background:none;border:0;color:var(--rouge);font-size:22px;padding:4px 8px}
+.line .tot{font-size:14px;text-align:right;color:var(--gris)}
+.list-item{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:12px 4px;border-bottom:1px solid #eee}
+.list-item:last-child{border-bottom:0}
+.list-item .l{flex:1;min-width:0}
+.list-item .l b{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sigbox{border:1px dashed var(--gris);border-radius:10px;min-height:90px;display:flex;align-items:center;justify-content:center;background:#fff;margin-bottom:10px}
+.sigbox img{max-width:100%;max-height:120px}
+#sigModal{position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:20;display:none;flex-direction:column;justify-content:center;padding:14px}
+#sigModal .in{background:#fff;border-radius:14px;padding:12px}
+#sigCanvas{width:100%;height:240px;border:1px solid var(--ligne);border-radius:10px;touch-action:none;background:#fff;display:block}
+.actions{position:fixed;left:0;right:0;bottom:0;background:#fff;border-top:1px solid var(--ligne);padding:10px 14px calc(10px + env(safe-area-inset-bottom));display:flex;gap:10px;z-index:6}
+.actions button{flex:1}
+#toast{position:fixed;left:50%;bottom:90px;transform:translateX(-50%);background:var(--noir);color:#fff;padding:12px 18px;border-radius:12px;z-index:30;display:none;max-width:90%;text-align:center;font-size:15px;border:1px solid var(--or)}
+.rg-grid{display:grid;grid-template-columns:64px repeat(3,minmax(0,1fr));gap:6px;align-items:center;margin-bottom:6px}
+.rg-grid .h{font-size:13px;color:var(--gris);text-align:center}
+.rg-grid .l{font-size:14px;font-weight:600;color:var(--noir)}
+.rg-grid input{padding:9px 6px;text-align:center}
+.rg-sub{margin:14px 0 8px;padding:6px 10px;background:var(--noir);color:var(--or);font-weight:700;font-size:14px;letter-spacing:.6px;border-radius:8px}
+.tot-big{font-size:18px;font-weight:700;text-align:right;color:var(--noir)}
+</style>
+</head>
+<body>
+<header class="bar">
+  <button class="back" id="btnBack" style="visibility:hidden" aria-label="Retour">‹</button>
+  <h1 id="titre">TechSO Terrain</h1>
+</header>
+
+<main>
+<!-- ============ ACCUEIL ============ -->
+<section class="screen on" id="s-home">
+  <div id="homeAlert"></div>
+  <button class="home-btn" id="goNewInter"><span class="ico">🔧</span><span>Nouvelle intervention<small>Rapport client signé + brouillon de BI</small></span></button>
+  <button class="home-btn" id="goAppel"><span class="ico">📞</span><span>Assistance téléphonique<small>Noter un appel de dépannage (facturable)</small></span></button>
+  <button class="home-btn" id="goHisto"><span class="ico">📋</span><span>Interventions <span id="bInter"></span><small>Brouillons, à envoyer, envoyées</small></span></button>
+  <button class="home-btn" id="goAppels"><span class="ico">💶</span><span>Appels à facturer <span id="bAppels"></span><small>Préparer les brouillons de facture</small></span></button>
+  <button class="home-btn" id="goReglages"><span class="ico">⚙️</span><span>Réglages<small>Émetteur, tarifs, listes clients et articles</small></span></button>
+  <p class="muted" style="text-align:center">TechSO Terrain v1.0 — données stockées sur ce téléphone uniquement.<br>Aucun numéro de BI ni de facture n'est créé ici : Docs Pro numérote à la sauvegarde.</p>
+</section>
+
+<!-- ============ INTERVENTION ============ -->
+<section class="screen" id="s-inter">
+  <div id="interLock"></div>
+  <div class="card">
+    <h2>Client</h2>
+    <div class="cp" data-prefix="i"></div>
+  </div>
+  <div class="card">
+    <h2>Intervention</h2>
+    <label><span>Lieu / chantier / référence (PO…)</span><input id="i_chantier"></label>
+    <label><span>Date</span><input id="i_date" type="date"></label>
+    <div class="row2">
+      <label><span>Arrivée</span><input id="i_hdeb" type="time"></label>
+      <label><span>Départ</span><input id="i_hfin" type="time"></label>
+    </div>
+    <div class="muted" id="i_duree"></div>
+  </div>
+  <div class="card">
+    <h2>Machine</h2>
+    <label><span>Marque</span><input id="i_m_marque"></label>
+    <div class="row2">
+      <label><span>Type</span><input id="i_m_type"></label>
+      <label><span>Numéro</span><input id="i_m_numero"></label>
+    </div>
+  </div>
+  <div class="card">
+    <h2>Peson</h2>
+    <label><span>Type</span><input id="i_p_type"></label>
+    <div class="row2">
+      <label><span>Version écran</span><input id="i_p_ecran"></label>
+      <label><span>Version CPU</span><input id="i_p_cpu"></label>
+    </div>
+  </div>
+  <div class="card">
+    <h2>Réglages peson (C-7)</h2>
+    <p class="muted" style="margin-top:0">Valeurs finales laissées en partant. À vide + Réf 3.</p>
+    <div class="row2">
+      <label><span>Outil</span><input id="rg_outil" placeholder="1/tool-A"></label>
+      <label><span>Mode statique</span><select id="rg_mode"><option value="">—</option><option>Activé</option><option>Désactivé</option></select></label>
+    </div>
+    <div class="rg-sub">À VIDE</div>
+    <label><span>Offset (t)</span><input id="rg_vide_offset" inputmode="decimal"></label>
+    <div class="rg-grid"><span></span><span class="h">sec</span><span class="h">bar HP</span><span class="h">bar BP</span></div>
+    <div id="rg_rows_vide"></div>
+    <div class="rg-sub">RÉF 3</div>
+    <label><span>Charge (t)</span><input id="rg_ref3_charge" inputmode="decimal"></label>
+    <div class="rg-grid"><span></span><span class="h">sec</span><span class="h">bar HP</span><span class="h">bar BP</span></div>
+    <div id="rg_rows_ref3"></div>
+    <div class="row2" style="margin-top:8px">
+      <label><span>Fluct. Max dyn HP (%)</span><input id="rg_fhp" inputmode="decimal"></label>
+      <label><span>Fluct. Max dyn BP (bar)</span><input id="rg_fbp" inputmode="decimal"></label>
+    </div>
+  </div>
+  <div class="card">
+    <h2>Compte rendu</h2>
+    <label><span>Panne / demande constatée</span><textarea id="i_panne"></textarea></label>
+    <label><span>Travaux réalisés (repris dans les notes du BI)</span><textarea id="i_travaux"></textarea></label>
+    <label><span>Observations / recommandations</span><textarea id="i_obs"></textarea></label>
+  </div>
+  <div class="card">
+    <h2>Pièces, main-d'œuvre, déplacement</h2>
+    <p class="muted" style="margin-top:0">Prix utilisés seulement pour le brouillon de BI. Le rapport client ne montre aucun prix.</p>
+    <input id="i_art_search" placeholder="🔎 Article : tape 2 lettres (réf. ou libellé)">
+    <div class="suggest" id="i_art_suggest" style="display:none"></div>
+    <div id="i_lines"></div>
+    <div class="row3">
+      <button class="btn btn-sm" id="i_addMO">+ Main-d'œuvre</button>
+      <button class="btn btn-sm" id="i_addDep">+ Déplacement</button>
+      <button class="btn btn-sm" id="i_addLibre">+ Ligne libre</button>
+    </div>
+    <div class="tot-big" id="i_total" style="margin-top:10px"></div>
+  </div>
+  <div class="card">
+    <h2>Signature client</h2>
+    <label><span>Nom du signataire</span><input id="i_signataire"></label>
+    <div class="sigbox" id="i_sigbox"><span class="muted">Pas encore signé</span></div>
+    <button class="btn btn-block" id="i_sign">✍️ Faire signer le client</button>
+  </div>
+  <button class="btn-rouge btn-block" id="i_delete">Supprimer cette intervention</button>
+  <div class="actions" id="i_actions">
+    <button class="btn" id="i_save">Enregistrer</button>
+    <button class="btn-or" id="i_send">Terminer et envoyer</button>
+  </div>
+</section>
+
+<!-- ============ LISTE INTERVENTIONS ============ -->
+<section class="screen" id="s-histo">
+  <div class="card"><h2>Interventions</h2><div id="histoList"></div></div>
+</section>
+
+<!-- ============ APPEL ============ -->
+<section class="screen" id="s-appel">
+  <div class="card">
+    <h2>Client qui paiera</h2>
+    <div class="cp" data-prefix="a"></div>
+  </div>
+  <div class="card">
+    <h2>Appel</h2>
+    <div class="row2">
+      <label><span>Date et heure</span><input id="a_date" type="datetime-local"></label>
+      <label><span>Durée (min)</span><input id="a_duree" type="number" inputmode="numeric" min="0"></label>
+    </div>
+    <label><span>Personne qui appelle</span><input id="a_appelant" placeholder="Nom, fonction (ex. conducteur)"></label>
+    <label><span>Machine / peson / objet de l'appel</span><textarea id="a_objet" style="min-height:64px"></textarea></label>
+    <div class="row2">
+      <label><span>Tarif annoncé à l'appelant ?</span><select id="a_tarif"><option value="">— à renseigner —</option><option value="oui">Oui</option><option value="non">Non</option></select></label>
+      <label><span>Prix (€)</span><input id="a_prix" type="number" inputmode="decimal" step="0.01"></label>
+    </div>
+    <label><span>Accepté par (nom, société)</span><input id="a_accepte"></label>
+    <div id="a_warn"></div>
+  </div>
+  <button class="btn-rouge btn-block" id="a_delete" style="display:none">Supprimer cet appel</button>
+  <div class="actions">
+    <button class="btn" id="a_cancel">Annuler</button>
+    <button class="btn-or" id="a_save">Enregistrer l'appel</button>
+  </div>
+</section>
+
+<!-- ============ APPELS À FACTURER ============ -->
+<section class="screen" id="s-appels">
+  <div id="appelsGroups"></div>
+  <div class="card"><h2>Déjà facturés (brouillon envoyé)</h2><div id="appelsDone"></div></div>
+</section>
+
+<!-- ============ RÉGLAGES ============ -->
+<section class="screen" id="s-reglages">
+  <div class="card">
+    <h2>Listes (depuis Docs Pro)</h2>
+    <p class="muted" style="margin-top:0" id="r_listesInfo"></p>
+    <button class="btn btn-block" id="r_impClients">Importer clients.csv</button>
+    <button class="btn btn-block" id="r_impArticles">Importer articles.csv</button>
+    <input type="file" id="r_fileClients" accept=".csv,.txt,text/*" style="display:none">
+    <input type="file" id="r_fileArticles" accept=".csv,.txt,text/*" style="display:none">
+  </div>
+  <div class="card">
+    <h2>Émetteur (repris tel quel dans Docs Pro)</h2>
+    <button class="btn btn-block" id="r_impSeller">Charger depuis un fichier Docs Pro / réglages</button>
+    <input type="file" id="r_fileSeller" accept=".json,.txt,application/json,text/plain" style="display:none">
+    <label><span>Dénomination</span><input id="r_s_name"></label>
+    <div class="row2">
+      <label><span>Courriel</span><input id="r_s_mail"></label>
+      <label><span>Téléphone</span><input id="r_s_tel"></label>
+    </div>
+    <label><span>Adresse</span><textarea id="r_s_addr" style="min-height:60px"></textarea></label>
+    <label><span>SIRET</span><input id="r_s_siret"></label>
+    <label><span>Coordonnées bancaires (RIB)</span><textarea id="r_s_rib"></textarea></label>
+    <label><span>Pénalités / indemnités</span><textarea id="r_s_penalties" style="min-height:60px"></textarea></label>
+    <label><span>Mentions micro (pied de page)</span><textarea id="r_s_micro" style="min-height:60px"></textarea></label>
+  </div>
+  <div class="card">
+    <h2>Tarifs et libellés</h2>
+    <label><span>Technicien (nom sur le rapport)</span><input id="r_tech"></label>
+    <div class="row3">
+      <label><span>Réf. MO</span><input id="r_mo_ref"></label>
+      <label><span>Unité</span><input id="r_mo_unit"></label>
+      <label><span>Taux (€/h)</span><input id="r_mo_pu" type="number" inputmode="decimal" step="0.01"></label>
+    </div>
+    <label><span>Libellé main-d'œuvre</span><input id="r_mo_desc"></label>
+    <div class="row3">
+      <label><span>Réf. dépl.</span><input id="r_dep_ref"></label>
+      <label><span>Unité</span><input id="r_dep_unit"></label>
+      <label><span>Prix (€)</span><input id="r_dep_pu" type="number" inputmode="decimal" step="0.01"></label>
+    </div>
+    <label><span>Libellé déplacement</span><input id="r_dep_desc"></label>
+    <div class="row2">
+      <label><span>Réf. assistance</span><input id="r_as_ref"></label>
+      <label><span>Prix d'un appel (€)</span><input id="r_as_pu" type="number" inputmode="decimal" step="0.01"></label>
+    </div>
+  </div>
+  <div class="card">
+    <h2>Sécurité des données</h2>
+    <p class="muted" style="margin-top:0" id="r_persist"></p>
+    <button class="btn btn-block" id="r_backup">Envoyer une sauvegarde complète</button>
+    <button class="btn btn-block" id="r_restore">Restaurer une sauvegarde</button>
+    <input type="file" id="r_fileRestore" accept=".txt,.json,text/plain,application/json" style="display:none">
+  </div>
+  <div class="actions"><button class="btn-or" id="r_save">Enregistrer les réglages</button></div>
+</section>
+</main>
+
+<div id="sigModal"><div class="in">
+  <p style="margin:0 0 8px;font-weight:600">Signature du client</p>
+  <canvas id="sigCanvas"></canvas>
+  <div class="row2" style="margin-top:10px">
+    <button class="btn" id="sigClear">Effacer</button>
+    <button class="btn-or" id="sigOk">Valider</button>
+  </div>
+  <button class="btn btn-block" id="sigCancel" style="margin-top:10px">Annuler</button>
+</div></div>
+<div id="toast"></div>
+
+<script src="jspdf.umd.min.js"></script>
+<script src="logo.js"></script>
+<script>
+'use strict';
+/* ================= OUTILS ================= */
+const $ = (q, el=document) => el.querySelector(q);
+const $$ = (q, el=document) => Array.from(el.querySelectorAll(q));
+const APP_VERSION = 'TechSO Terrain v1.0';
+const z = n => String(n).padStart(2,'0');
+const todayStr = () => { const d=new Date(); return d.getFullYear()+'-'+z(d.getMonth()+1)+'-'+z(d.getDate()); };
+const nowLocal = () => { const d=new Date(); return todayStr()+'T'+z(d.getHours())+':'+z(d.getMinutes()); };
+const fmtDate = s => { if(!s) return ''; const [y,m,d]=s.slice(0,10).split('-'); return `${d}/${m}/${y}`; };
+const fmtEUR = n => (Math.round((Number(n)||0)*100)/100).toLocaleString('fr-FR',{minimumFractionDigits:2,maximumFractionDigits:2})+' €';
+const num = v => { const n=parseFloat(String(v??'').replace(/\s/g,'').replace(',','.')); return isFinite(n)?n:0; };
+const r2 = n => Math.round(n*100)/100;
+const esc = s => String(s??'').replace(/[&<>"']/g, m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+const stripAcc = s => String(s||'').normalize('NFD').replace(/[̀-ͯ]/g,'');
+const normKey = s => stripAcc(String(s||'').toLowerCase()).replace(/[^a-z0-9]+/g,'_').replace(/^_+|_+$/g,'');
+const slug = s => stripAcc(String(s||'')).toUpperCase().replace(/[^A-Z0-9]+/g,'-').replace(/^-+|-+$/g,'').slice(0,30) || 'CLIENT';
+const uid = () => Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+function toast(msg, ms=3500){ const t=$('#toast'); t.textContent=msg; t.style.display='block'; clearTimeout(toast._t); toast._t=setTimeout(()=>t.style.display='none', ms); }
+
+/* ================= STOCKAGE (localStorage, sur le téléphone) ================= */
+const KEYS = { settings:'tsf_settings', clients:'tsf_clients', articles:'tsf_articles', inter:'tsf_interventions', appels:'tsf_appels' };
+function load(k, def){ try{ const v=localStorage.getItem(k); return v?JSON.parse(v):def; }catch(e){ return def; } }
+function save(k, v){ try{ localStorage.setItem(k, JSON.stringify(v)); return true; }catch(e){ toast('⚠️ Mémoire du téléphone pleine : enregistrement impossible.'); return false; } }
+
+const DEFAULT_SETTINGS = {
+  seller:{ name:'', mail:'', tel:'', addr:'', siret:'', vat:'franchise', rib:'', penalties:'', micro:'' },
+  tech:'Marc Rouchvarger',
+  mo:{ ref:'H-INT', desc:"Heure d'intervention", unit:'heure', pu:82 },
+  dep:{ ref:'DEP', desc:'Frais de déplacement', unit:'forfait', pu:0 },
+  assist:{ ref:'ASSIST-TEL', pu:50 }
+};
+function getSettings(){
+  const s = load(KEYS.settings, {});
+  return { ...DEFAULT_SETTINGS, ...s,
+    seller:{...DEFAULT_SETTINGS.seller, ...(s.seller||{})},
+    mo:{...DEFAULT_SETTINGS.mo, ...(s.mo||{})}, dep:{...DEFAULT_SETTINGS.dep, ...(s.dep||{})}, assist:{...DEFAULT_SETTINGS.assist, ...(s.assist||{})} };
+}
+const sellerReady = () => { const s=getSettings().seller; return !!(s.name && s.siret && s.addr); };
+
+/* ================= CSV (même logique que Docs Pro) ================= */
+const CP850 = 'ÇüéâäàåçêëèïîìÄÅÉæÆôöòûùÿÖÜø£Ø×ƒáíóúñÑªº¿®¬½¼¡«»░▒▓│┤ÁÂÀ©╣║╗╝¢¥┐└┴┬├─┼ãÃ╚╔╩╦╠═╬¤ðÐÊËÈıÍÎÏ┘┌█▄¦Ì▀ÓßÔÒõÕµþÞÚÛÙýÝ¯´­±‗¾¶§÷¸°¨·¹³²■ ';
+function decodeBytes(buf){
+  const u8 = new Uint8Array(buf);
+  try{ return new TextDecoder('utf-8',{fatal:true}).decode(u8); }catch(e){}
+  let cp=''; for(const b of u8) cp += b<128 ? String.fromCharCode(b) : CP850[b-128];
+  const win = new TextDecoder('windows-1252').decode(u8);
+  const score = s => (s.match(/[éèàçêùôîâëïüÉÈ]/g)||[]).length;
+  return score(cp) >= score(win) ? cp : win;
+}
+function detectDelimiter(sample){
+  const c={',':0,';':0,'\t':0}; let inQ=false;
+  for(const ch of sample){ if(ch==='"'){inQ=!inQ;continue;} if(!inQ && ch in c) c[ch]++; }
+  return Object.keys(c).reduce((a,b)=> c[b]>c[a]?b:a, ',');
+}
+function parseCSVSmart(text){
+  text = text.replace(/^﻿/,'');
+  const delim = detectDelimiter(text.split(/\r?\n/).slice(0,5).join('\n'));
+  const rows=[]; let row=[], field='', inQ=false;
+  for(let i=0;i<text.length;i++){
+    const ch=text[i];
+    if(ch==='"'){ if(inQ && text[i+1]==='"'){field+='"';i++;} else inQ=!inQ; }
+    else if(ch===delim && !inQ){ row.push(field); field=''; }
+    else if((ch==='\n'||ch==='\r'||ch==='\u0085') && !inQ){ if(ch==='\r'&&text[i+1]==='\n') i++; row.push(field); field=''; if(row.length>1||row[0]!=='') rows.push(row); row=[]; }
+    else field+=ch;
+  }
+  row.push(field); if(row.length>1||row[0]!=='') rows.push(row);
+  if(!rows.length) return [];
+  const header = rows.shift().map(normKey);
+  return rows.map(r=>{ const o={}; header.forEach((h,i)=> o[h]=(r[i]??'').trim()); return o; });
+}
+function mapClients(rows){
+  return rows.map(r=>{
+    const name = r.nom || r.name || r.raison_sociale || r.societe || r.entreprise || r.client;
+    const addrParts=[r.adresse_1||r.adresse1, r.adresse_2||r.adresse2, r.adresse_3||r.adresse3].filter(Boolean);
+    const addr=(addrParts.join('\n')+'\n'+(r.code_postal||'')+' '+(r.ville||'')).trim();
+    const siret = r.siret || r.n_i_i || r.nii || '';
+    const contact=[r.nom_du_contact||r.contact||'', r.e_mail_du_contact||r.email||r.e_mail||r.mail||'', r.telephone||r.telephone_du_contact||'', r.portable_du_contact||r.portable||''].filter(Boolean).join(' · ');
+    return { name, addr, siret, contact, ville:r.ville||'' };
+  }).filter(x=>x.name);
+}
+function mapArticles(rows){
+  return rows.map(r=>({
+    ref: r.code || r.ref || r.reference || r.sku || '',
+    desc: r.designation_longue || r.designation || r.desc || r.libelle || r.description || '',
+    unit: r.unit || r.unite || 'unité',
+    pu: num(r.prix_ttc || r.pu_ttc || r.ttc || r.prix_de_vente_ttc || r.pv_ttc || r.prix_de_vente_ht || r.prix_unitaire || r.pu || r.prix_ht || r.prix_d_achat_ht || r.prix)
+  })).filter(x=>x.desc);
+}
+const readFile = f => new Promise((res,rej)=>{ const r=new FileReader(); r.onload=()=>res(r.result); r.onerror=rej; r.readAsArrayBuffer(f); });
+const filterList = (list, q, keys) => { const s=stripAcc(q.toLowerCase()); return list.filter(x=> keys.some(k=> stripAcc(String(x[k]||'').toLowerCase()).includes(s))).slice(0,30); };
+
+/* ================= NAVIGATION ================= */
+const TITLES = { home:'TechSO Terrain', inter:'Intervention', histo:'Interventions', appel:'Assistance téléphonique', appels:'Appels à facturer', reglages:'Réglages' };
+let current = 'home', backTo = 'home';
+function show(name, back='home'){
+  $$('section.screen').forEach(s=>s.classList.toggle('on', s.id==='s-'+name));
+  current = name; backTo = back;
+  $('#titre').textContent = TITLES[name];
+  $('#btnBack').style.visibility = name==='home' ? 'hidden' : 'visible';
+  window.scrollTo(0,0);
+  if(name==='home') renderHome();
+  if(name==='histo') renderHisto();
+  if(name==='appels') renderAppels();
+  if(name==='reglages') renderReglages();
+}
+$('#btnBack').onclick = () => { if(current==='inter') saveInter(true); show(backTo==='inter'?'home':backTo); };
+window.addEventListener('popstate', ()=>{});
+
+/* ================= SÉLECTEUR CLIENT (liste ou saisie manuelle) ================= */
+function buildClientPicker(container){
+  const p = container.dataset.prefix;
+  container.innerHTML = `
+    <input id="${p}_c_search" placeholder="🔎 Chercher dans la liste (2 lettres)… ou saisir dessous">
+    <div class="suggest" id="${p}_c_suggest" style="display:none"></div>
+    <label><span>Raison sociale / nom *</span><input id="${p}_c_name"></label>
+    <label><span>Adresse de facturation</span><textarea id="${p}_c_addr" style="min-height:64px"></textarea></label>
+    <div class="row2">
+      <label><span>SIRET</span><input id="${p}_c_siret"></label>
+      <label><span>À l'attention de</span><input id="${p}_c_attention"></label>
+    </div>
+    <label><span>Contact / e-mail / tél.</span><input id="${p}_c_contact"></label>`;
+  const search=$(`#${p}_c_search`), sug=$(`#${p}_c_suggest`);
+  search.addEventListener('input', ()=>{
+    const q=search.value.trim();
+    if(q.length<2){ sug.style.display='none'; return; }
+    const res = filterList(load(KEYS.clients,[]), q, ['name','ville','contact']);
+    sug.innerHTML = res.length ? res.map((c,i)=>`<div data-i="${i}"><b>${esc(c.name)}</b><br><small>${esc((c.addr||'').replace(/\n/g,' · '))}</small></div>`).join('') : '<div class="muted">Aucun client trouvé : saisis-le dessous.</div>';
+    sug.style.display='block';
+    $$('div[data-i]', sug).forEach(d=> d.onclick=()=>{ setClient(p, res[+d.dataset.i]); sug.style.display='none'; search.value=''; });
+  });
+}
+function setClient(p, c){ ['name','addr','siret','attention','contact'].forEach(k=> $(`#${p}_c_${k}`).value = (c&&c[k])||''); }
+function getClient(p){ const o={}; ['name','addr','siret','attention','contact'].forEach(k=> o[k]=$(`#${p}_c_${k}`).value.trim()); return o; }
+function rememberClient(c){
+  if(!c.name) return;
+  const list=load(KEYS.clients,[]);
+  if(list.some(x=> stripAcc(x.name).toLowerCase()===stripAcc(c.name).toLowerCase())) return;
+  list.push({name:c.name, addr:c.addr, siret:c.siret, contact:c.contact, ville:'', manuel:true});
+  save(KEYS.clients, list);
+}
+$$('.cp').forEach(buildClientPicker);
+
+/* ================= ACCUEIL ================= */
+function renderHome(){
+  const inters=load(KEYS.inter,[]), appels=load(KEYS.appels,[]);
+  const nonEnv = inters.filter(i=>i.statut!=='envoye').length;
+  const aFact = appels.filter(a=>a.statut!=='facture').length;
+  $('#bInter').innerHTML = nonEnv ? `<span class="badge">${nonEnv}</span>` : '';
+  $('#bAppels').innerHTML = aFact ? `<span class="badge">${aFact}</span>` : '';
+  let h='';
+  if(!sellerReady()) h+=`<div class="alert rouge">⚠️ Réglages à faire avant le premier envoi : charge le bloc émetteur (Réglages → « Charger depuis un fichier »).</div>`;
+  if(!load(KEYS.clients,[]).length) h+=`<div class="alert">💡 Importe ton clients.csv et ton articles.csv dans Réglages pour la recherche rapide.</div>`;
+  if(nonEnv) h+=`<div class="alert">📌 ${nonEnv} intervention(s) pas encore envoyée(s) vers le PC.</div>`;
+  $('#homeAlert').innerHTML=h;
+}
+$('#goNewInter').onclick = ()=> openInter(null);
+$('#goAppel').onclick = ()=> openAppel(null);
+$('#goHisto').onclick = ()=> show('histo');
+$('#goAppels').onclick = ()=> show('appels');
+$('#goReglages').onclick = ()=> show('reglages');
+
+/* ================= INTERVENTION ================= */
+let cur = null; // intervention en cours
+const IFIELDS = { chantier:'i_chantier', date:'i_date', hDebut:'i_hdeb', hFin:'i_hfin', panne:'i_panne', travaux:'i_travaux', observations:'i_obs', signataire:'i_signataire' };
+function newInter(){ return { id:uid(), createdAt:new Date().toISOString(), statut:'brouillon', client:{}, chantier:'', date:todayStr(), hDebut:'', hFin:'', machine:{marque:'',type:'',numero:''}, peson:{type:'',versionEcran:'',versionCpu:''}, reglages:emptyReglages(), panne:'', travaux:'', observations:'', lines:[], signataire:'', signature:'', envoyeLe:'' }; }
+function openInter(id){
+  const list=load(KEYS.inter,[]);
+  cur = id ? JSON.parse(JSON.stringify(list.find(x=>x.id===id))) : newInter();
+  setClient('i', cur.client);
+  for(const [k,el] of Object.entries(IFIELDS)) $('#'+el).value = cur[k]||'';
+  $('#i_m_marque').value=cur.machine.marque; $('#i_m_type').value=cur.machine.type; $('#i_m_numero').value=cur.machine.numero;
+  $('#i_p_type').value=cur.peson.type; $('#i_p_ecran').value=cur.peson.versionEcran; $('#i_p_cpu').value=cur.peson.versionCpu;
+  writeReglages(cur.reglages);
+  renderLines(); renderSig(); majDuree(); applyLock();
+  show('inter', id ? 'histo' : 'home');
+}
+function readInterForm(){
+  cur.client = getClient('i');
+  for(const [k,el] of Object.entries(IFIELDS)) cur[k] = $('#'+el).value.trim();
+  cur.machine = { marque:$('#i_m_marque').value.trim(), type:$('#i_m_type').value.trim(), numero:$('#i_m_numero').value.trim() };
+  cur.peson = { type:$('#i_p_type').value.trim(), versionEcran:$('#i_p_ecran').value.trim(), versionCpu:$('#i_p_cpu').value.trim() };
+  cur.reglages = readReglages();
+}
+function saveInter(silent){
+  if(!cur || cur.statut==='envoye') return;
+  readInterForm();
+  const empty = !cur.client.name && !cur.panne && !cur.travaux && !cur.lines.length && !cur.machine.marque;
+  if(empty && silent) return;
+  const list=load(KEYS.inter,[]); const i=list.findIndex(x=>x.id===cur.id);
+  if(i>=0) list[i]=cur; else list.unshift(cur);
+  if(save(KEYS.inter, list) && !silent) toast('Intervention enregistrée sur le téléphone.');
+}
+function applyLock(){
+  const locked = cur.statut==='envoye';
+  $$('#s-inter input, #s-inter textarea, #s-inter select').forEach(el=> el.disabled=locked);
+  $$('#s-inter .line .del, #i_addMO, #i_addDep, #i_addLibre, #i_sign').forEach(el=> el.disabled=locked);
+  $('#interLock').innerHTML = locked ? `<div class="alert">✅ Envoyée le ${fmtDate(cur.envoyeLe)} — verrouillée. <button class="btn btn-sm" id="i_unlock" style="margin-top:8px">Modifier (efface la signature)</button></div>` : '';
+  $('#i_save').style.display = locked ? 'none':'';
+  $('#i_send').textContent = locked ? 'Renvoyer les fichiers' : 'Terminer et envoyer';
+  const u=$('#i_unlock'); if(u) u.onclick=()=>{ if(!confirm('Déverrouiller ? La signature sera effacée et il faudra refaire signer.')) return; cur.statut='brouillon'; cur.signature=''; cur.envoyeLe=''; persistCur(); renderSig(); applyLock(); };
+}
+function persistCur(){ const list=load(KEYS.inter,[]); const i=list.findIndex(x=>x.id===cur.id); if(i>=0) list[i]=cur; else list.unshift(cur); save(KEYS.inter,list); }
+function dureeMin(){ const a=$('#i_hdeb').value, b=$('#i_hfin').value; if(!a||!b) return 0; const [h1,m1]=a.split(':').map(Number), [h2,m2]=b.split(':').map(Number); let d=(h2*60+m2)-(h1*60+m1); if(d<0) d+=1440; return d; }
+function majDuree(){ const d=dureeMin(); $('#i_duree').textContent = d ? `Durée sur place : ${Math.floor(d/60)} h ${z(d%60)}` : ''; }
+['i_hdeb','i_hfin'].forEach(id=> $('#'+id).addEventListener('change', majDuree));
+
+/* Réglages peson Réf 3 */
+const RG_ROWS = [['stat','Statique'],['d1','Dyn. 1'],['d2','Dyn. 2'],['d3','Dyn. 3'],['d4','Dyn. 4']];
+const RG_BLOCS = [['vide','offset'],['ref3','charge']];
+RG_BLOCS.forEach(([b])=> $('#rg_rows_'+b).innerHTML = RG_ROWS.map(([k,l])=>`<div class="rg-grid"><span class="l">${l}</span>`+['sec','hp','bp'].map(c=>`<input id="rg_${b}_${k}_${c}" inputmode="decimal">`).join('')+`</div>`).join(''));
+const emptyBloc = extra => { const o={[extra]:''}; RG_ROWS.forEach(([k])=> o[k]={sec:'',hp:'',bp:''}); return o; };
+const emptyReglages = () => ({ outil:'', mode:'', fhp:'', fbp:'', vide:emptyBloc('offset'), ref3:emptyBloc('charge') });
+function writeReglages(r){
+  const e=emptyReglages(); r={...e, ...(r||{})};
+  ['outil','mode','fhp','fbp'].forEach(k=> $('#rg_'+k).value=r[k]||'');
+  RG_BLOCS.forEach(([b,x])=>{ const B={...e[b], ...(r[b]||{})}; $(`#rg_${b}_${x}`).value=B[x]||''; RG_ROWS.forEach(([k])=> ['sec','hp','bp'].forEach(c=> $(`#rg_${b}_${k}_${c}`).value=(B[k]&&B[k][c])||'')); });
+}
+function readReglages(){
+  const o={}; ['outil','mode','fhp','fbp'].forEach(k=> o[k]=$('#rg_'+k).value.trim());
+  RG_BLOCS.forEach(([b,x])=>{ o[b]={[x]:$(`#rg_${b}_${x}`).value.trim()}; RG_ROWS.forEach(([k])=>{ o[b][k]={}; ['sec','hp','bp'].forEach(c=> o[b][k][c]=$(`#rg_${b}_${k}_${c}`).value.trim()); }); });
+  return o;
+}
+const filled = o => !!o && JSON.stringify(o).replace(/"[a-z0-9]+":/g,'').replace(/[{}",:\s]/g,'').length>0;
+const hasReglages = filled;
+/* À vide obligatoire dès qu'on saisit des réglages : les 15 valeurs + l'offset */
+function videIncomplet(r){ if(!filled(r)) return false; const V=r.vide||{}; return !V.offset || RG_ROWS.some(([k])=> ['sec','hp','bp'].some(c=> !(V[k]&&V[k][c]))); }
+
+/* Lignes */
+const CATS = {pieces:'Pièces détachées', presta:'Prestation', dep:'Frais de déplacement', divers:'Divers'};
+function renderLines(){
+  const box=$('#i_lines');
+  box.innerHTML = cur.lines.map((l,i)=>`
+    <div class="line" data-i="${i}">
+      <div class="top"><input data-k="desc" value="${esc(l.desc)}" placeholder="Désignation"><button class="del" data-del="${i}" aria-label="Supprimer">✖</button></div>
+      <div class="row2"><input data-k="ref" value="${esc(l.ref)}" placeholder="Réf."><select data-k="cat">${Object.entries(CATS).map(([k,v])=>`<option value="${k}" ${l.cat===k?'selected':''}>${v}</option>`).join('')}</select></div>
+      <div class="row3" style="margin-top:8px"><input data-k="qty" type="number" inputmode="decimal" step="0.01" value="${l.qty}" placeholder="Qté"><input data-k="unit" value="${esc(l.unit)}" placeholder="Unité"><input data-k="pu" type="number" inputmode="decimal" step="0.01" value="${l.pu}" placeholder="PU €"></div>
+      <div class="tot">${fmtEUR(num(l.qty)*num(l.pu))}</div>
+    </div>`).join('');
+  $$('.line', box).forEach(div=>{
+    const i=+div.dataset.i;
+    $$('[data-k]', div).forEach(el=> el.addEventListener('input', ()=>{
+      const k=el.dataset.k; cur.lines[i][k] = (k==='qty'||k==='pu') ? num(el.value) : el.value;
+      $('.tot',div).textContent = fmtEUR(num(cur.lines[i].qty)*num(cur.lines[i].pu)); majTotal();
+    }));
+  });
+  $$('[data-del]', box).forEach(b=> b.onclick=()=>{ cur.lines.splice(+b.dataset.del,1); renderLines(); });
+  majTotal();
+}
+function majTotal(){ const t=cur.lines.reduce((s,l)=>s+num(l.qty)*num(l.pu),0); $('#i_total').textContent = cur.lines.length ? 'Total brouillon BI : '+fmtEUR(t) : ''; }
+function addLine(l){ cur.lines.push({ref:l.ref||'', desc:l.desc||'', unit:l.unit||'unité', cat:l.cat||'pieces', qty:l.qty??1, pu:num(l.pu)}); renderLines(); }
+$('#i_addMO').onclick=()=>{ const s=getSettings().mo; const d=dureeMin(); addLine({ref:s.ref, desc:s.desc, unit:s.unit, cat:'presta', qty: d? Math.ceil(d/15)/4 : 1, pu:s.pu}); if(d) toast('Heures reprises de la durée sur place (arrondi au ¼ h supérieur) : ajuste si besoin.'); };
+$('#i_addDep').onclick=()=>{ const s=getSettings().dep; addLine({ref:s.ref, desc:s.desc, unit:s.unit, cat:'dep', qty:1, pu:s.pu}); };
+$('#i_addLibre').onclick=()=> addLine({cat:'divers'});
+$('#i_art_search').addEventListener('input', e=>{
+  const q=e.target.value.trim(), sug=$('#i_art_suggest');
+  if(q.length<2){ sug.style.display='none'; return; }
+  const res=filterList(load(KEYS.articles,[]), q, ['ref','desc']);
+  sug.innerHTML = res.length ? res.map((a,i)=>`<div data-i="${i}"><b>${esc(a.ref)}</b> — ${esc(a.desc)}<br><small>${fmtEUR(a.pu)}</small></div>`).join('') : '<div class="muted">Aucun article : utilise « + Ligne libre ».</div>';
+  sug.style.display='block';
+  $$('div[data-i]',sug).forEach(d=> d.onclick=()=>{ const a=res[+d.dataset.i]; addLine({...a, cat:'pieces', qty:1}); sug.style.display='none'; e.target.value=''; });
+});
+
+/* Signature */
+function renderSig(){ $('#i_sigbox').innerHTML = cur.signature ? `<img src="${cur.signature}" alt="signature">` : '<span class="muted">Pas encore signé</span>'; }
+const cv=$('#sigCanvas'); let ctx, drawing=false, hasInk=false;
+function openSig(){
+  $('#sigModal').style.display='flex';
+  const r=cv.getBoundingClientRect(), dpr=window.devicePixelRatio||1;
+  cv.width=r.width*dpr; cv.height=r.height*dpr; ctx=cv.getContext('2d'); ctx.scale(dpr,dpr);
+  ctx.fillStyle='#fff'; ctx.fillRect(0,0,r.width,r.height); ctx.lineWidth=2.4; ctx.lineCap='round'; ctx.lineJoin='round'; ctx.strokeStyle='#111'; hasInk=false;
+}
+const pos = e => { const r=cv.getBoundingClientRect(); return [e.clientX-r.left, e.clientY-r.top]; };
+cv.addEventListener('pointerdown', e=>{ drawing=true; cv.setPointerCapture(e.pointerId); const [x,y]=pos(e); ctx.beginPath(); ctx.moveTo(x,y); ctx.lineTo(x+0.1,y+0.1); ctx.stroke(); hasInk=true; });
+cv.addEventListener('pointermove', e=>{ if(!drawing) return; const [x,y]=pos(e); ctx.lineTo(x,y); ctx.stroke(); });
+['pointerup','pointercancel'].forEach(t=> cv.addEventListener(t, ()=> drawing=false));
+$('#i_sign').onclick=()=>{ if(!$('#i_signataire').value.trim()) { toast('Indique d\'abord le nom du signataire.'); $('#i_signataire').focus(); return; } openSig(); };
+$('#sigClear').onclick=openSig;
+$('#sigCancel').onclick=()=> $('#sigModal').style.display='none';
+$('#sigOk').onclick=()=>{
+  if(!hasInk){ toast('Signature vide.'); return; }
+  // export réduit (JPEG fond blanc) pour limiter la place prise sur le téléphone
+  const out=document.createElement('canvas'); out.width=600; out.height=Math.round(600*cv.height/cv.width);
+  const o=out.getContext('2d'); o.fillStyle='#fff'; o.fillRect(0,0,out.width,out.height); o.drawImage(cv,0,0,out.width,out.height);
+  cur.signature = out.toDataURL('image/jpeg',0.8); cur.sigRatio = out.height/out.width; cur.signeLe = new Date().toISOString();
+  $('#sigModal').style.display='none'; renderSig(); saveInter(true);
+};
+
+$('#i_save').onclick=()=> saveInter(false);
+$('#i_delete').onclick=()=>{
+  if(!confirm('Supprimer définitivement cette intervention du téléphone ?')) return;
+  save(KEYS.inter, load(KEYS.inter,[]).filter(x=>x.id!==cur.id)); cur=null; show('home'); toast('Intervention supprimée.');
+};
+$('#i_send').onclick = async ()=>{
+  if(cur.statut!=='envoye'){
+    readInterForm();
+    if(!sellerReady()){ toast('Réglages → charge d\'abord le bloc émetteur.'); return; }
+    if(!cur.client.name){ toast('Il manque le nom du client.'); return; }
+    if(!cur.date){ toast('Il manque la date.'); return; }
+    if(!cur.travaux){ toast('Il manque les travaux réalisés.'); return; }
+    if(videIncomplet(cur.reglages)){ toast('Réglages peson : le bloc « À vide » est obligatoire (offset + 15 valeurs).',5000); $('#rg_vide_offset').scrollIntoView({block:'center'}); return; }
+    if(!cur.signature && !confirm('Pas de signature client. Envoyer quand même ?')) return;
+    saveInter(true);
+  }
+  try{
+    const files=[ makeReportPDF(cur), makeBIDraft(cur) ];
+    const ok = await shareFiles(files, `Intervention ${cur.client.name} du ${fmtDate(cur.date)}`,
+      `Rapport d'intervention + brouillon de BI à importer dans Docs Pro (Historique → Importer).`);
+    if(ok){ cur.statut='envoye'; cur.envoyeLe=new Date().toISOString(); persistCur(); rememberClient(cur.client); applyLock(); toast('✅ Fichiers transmis. Intervention verrouillée.'); }
+  }catch(e){ console.error(e); toast('Erreur : '+(e.message||e)); }
+};
+
+/* ================= LISTE INTERVENTIONS ================= */
+function renderHisto(){
+  const list=load(KEYS.inter,[]);
+  $('#histoList').innerHTML = list.length ? list.map(i=>`
+    <div class="list-item" data-id="${i.id}"><div class="l"><b>${esc(i.client.name||'(client à saisir)')}</b><span class="muted">${fmtDate(i.date)} · ${esc(i.machine.marque||'')} ${esc(i.machine.type||'')}</span></div>
+    ${i.statut==='envoye'?'<span class="badge ok">envoyée</span>':'<span class="badge">à envoyer</span>'}</div>`).join('') : '<p class="muted">Aucune intervention.</p>';
+  $$('#histoList .list-item').forEach(d=> d.onclick=()=> openInter(d.dataset.id));
+}
+
+/* ================= DOCUMENTS DOCS PRO (brouillon, SANS numéro) ================= */
+function docsProDraft(doctype, client, doc, lines, terrain){
+  const s=getSettings();
+  const L = lines.map(l=>({ ref:l.ref||'', desc:l.desc||'', unit:l.unit||'unité', cat:CATS[l.cat]?l.cat:'pieces', qty:num(l.qty), pu:num(l.pu), vat:0 }));
+  const total = r2(L.reduce((t,l)=>t+l.qty*l.pu,0));
+  return {
+    doctype, number:'',
+    seller:{ ...s.seller, vat:'franchise' },
+    client:{ name:client.name||'', attention:client.attention||'', addr:client.addr||'', ship:'', siret:client.siret||'', contact:client.contact||'', hideShip:'oui' },
+    doc:{ issue:todayStr(), service:doc.service||'', due:'', ref:doc.ref||'', po:'', vendor:'', notes:doc.notes||'', showCGV:'oui', factureOrigine:'' },
+    discount:{ pct:'0', amt:'0' },
+    lines:L, totalHT:total, totalTVA:0, totalTTC:total,
+    savedAt:new Date().toISOString(),
+    terrain:{ source:APP_VERSION, ...terrain }
+  };
+}
+function stamp(){ const d=new Date(); return d.getFullYear()+z(d.getMonth()+1)+z(d.getDate())+'-'+z(d.getHours())+z(d.getMinutes()); }
+function jsonFile(obj, prefix, clientName){
+  /* Android refuse de partager un .json : on envoie un « .json.txt » que Docs Pro v4.1.1 sait importer */
+  const name=`TERRAIN_${prefix}_${stamp()}_${slug(clientName)}.json.txt`;
+  return new File([JSON.stringify(obj,null,2)], name, {type:'text/plain'});
+}
+function makeBIDraft(it){
+  const d = docsProDraft('intervention', it.client, { service:it.date, ref:it.chantier, notes:it.travaux }, it.lines,
+    { id:it.id, heureArrivee:it.hDebut, heureDepart:it.hFin, machine:it.machine, peson:it.peson, reglagesPeson:hasReglages(it.reglages)?it.reglages:null, signataire:it.signataire, signe:!!it.signature });
+  return jsonFile(d, 'BI', it.client.name);
+}
+
+/* ================= RAPPORT PDF (charte TechSO noir/or) ================= */
+const pdfTxt = s => String(s??'').replace(/[‘’ʼ]/g,"'").replace(/[“”]/g,'"').replace(/…/g,'...').replace(/[–—]/g,'-').replace(/œ/g,'oe').replace(/Œ/g,'OE').replace(/ /g,' ').replace(/[^\x00-\xFF€]/g,'');
+function makeReportPDF(it){
+  const { jsPDF } = window.jspdf;
+  const s = getSettings();
+  const pdf = new jsPDF({unit:'mm', format:'a4'});
+  const W=210, M=18, CW=W-2*M, BOTTOM=281, RH=5.8;
+  const NOIR=[22,22,22], OR=[208,161,71], TXT=[36,36,36], GRIS=[85,85,85];
+  let y;
+  const font=(sz,st='normal',col=TXT)=>{ pdf.setFont('helvetica',st); pdf.setFontSize(sz); pdf.setTextColor(...col); };
+  const need=h=>{ if(y+h>BOTTOM){ pdf.addPage(); headerSuite(); } };
+  function headerSuite(){ font(9,'bold',NOIR); pdf.text('TECHSO CONSULT', M, 14); font(9,'normal',GRIS); pdf.text(pdfTxt(`Rapport d'intervention - ${it.client.name} - ${fmtDate(it.date)}`), W-M, 14, {align:'right'}); pdf.setDrawColor(...OR); pdf.setLineWidth(0.6); pdf.line(M,16.5,W-M,16.5); y=24; }
+  // En-tête page 1 : logo + coordonnées (style devis Docs Pro)
+  const lw=40, lh=lw*(window.LOGO_RATIO||0.461);
+  if(window.LOGO_TECHSO) pdf.addImage(window.LOGO_TECHSO,'JPEG',M,12,lw,lh);
+  y=12+lh+5;
+  font(8.5,'bold',NOIR); pdf.text(pdfTxt(s.seller.name), M, y); y+=4;
+  font(8.5,'normal',GRIS);
+  pdfTxt(s.seller.addr).split('\n').filter(Boolean).forEach(l=>{ pdf.text(l.trim(), M, y); y+=3.8; });
+  pdf.text(pdfTxt(`Tél. ${s.seller.tel}  ·  ${s.seller.mail}`), M, y); y+=2;
+  font(17,'bold',NOIR); pdf.text("RAPPORT D'INTERVENTION", W-M, 22, {align:'right'});
+  font(10.5,'normal',TXT); pdf.text(pdfTxt(`Date : ${fmtDate(it.date)}`), W-M, 30, {align:'right'});
+  if(it.hDebut||it.hFin) pdf.text(pdfTxt(`Arrivée ${it.hDebut||'-'}  ·  Départ ${it.hFin||'-'}`), W-M, 35.5, {align:'right'});
+  y=Math.max(y,38)+2; pdf.setDrawColor(...OR); pdf.setLineWidth(0.8); pdf.line(M,y,W-M,y); y+=6.5;
+
+  const titre=t=>{ need(14); font(11.5,'bold',NOIR); pdf.text(pdfTxt(t.toUpperCase()), M, y); pdf.setDrawColor(...OR); pdf.setLineWidth(0.5); pdf.line(M,y+1.6,M+CW,y+1.6); y+=6.4; };
+  const para=(t,sz=11)=>{ font(sz,'normal',TXT); const ls=pdf.splitTextToSize(pdfTxt(t||'-'), CW); ls.forEach(l=>{ need(5.4); pdf.text(l,M,y); y+=5; }); y+=2.5; };
+  // Client + lieu (deux colonnes)
+  const colW=(CW-8)/2;
+  const bloc=(x,yy,lab,lines)=>{ font(8.5,'bold',GRIS); pdf.text(lab.toUpperCase(),x,yy); yy+=5; font(10.5,'normal',TXT); lines.forEach((l,i)=>{ if(i===0) font(10.5,'bold',NOIR); else font(10,'normal',TXT); pdf.splitTextToSize(pdfTxt(l),colW).forEach(t=>{ pdf.text(t,x,yy); yy+=4.8; }); }); return yy; };
+  const cl=[it.client.name, ...(it.client.addr||'').split('\n'), it.client.attention?`À l'attention de : ${it.client.attention}`:'', it.client.contact].filter(Boolean);
+  const dm=dureeMinOf(it);
+  const li=[it.chantier||'-', dm?`Temps sur place : ${Math.floor(dm/60)} h ${z(dm%60)}`:'', `Technicien : ${s.tech}`].filter(Boolean);
+  const y1=bloc(M,y,'Client',cl), y2=bloc(M+colW+8,y,'Lieu / référence',li); y=Math.max(y1,y2)+2;
+  // Machine et peson (tableaux clé/valeur)
+  const kv=(x,yy,head,rows)=>{ pdf.setFillColor(...NOIR); pdf.rect(x,yy,colW,RH,'F'); font(9.5,'bold',[255,255,255]); pdf.text(head.toUpperCase(),x+2.5,yy+4.1); yy+=RH;
+    rows.forEach((r,i)=>{ if(i%2===1){ pdf.setFillColor(244,244,244); pdf.rect(x,yy,colW,RH,'F'); } font(9.5,'normal',GRIS); pdf.text(r[0],x+2.5,yy+4.1); font(10,'bold',TXT); pdf.text(pdfTxt(r[1]||'-'),x+32,yy+4.1,{maxWidth:colW-34}); yy+=RH; });
+    pdf.setDrawColor(210,210,210); pdf.setLineWidth(0.2); pdf.rect(x,yy-RH*rows.length-RH,colW,RH*rows.length+RH); return yy; };
+  need(36);
+  const ya=kv(M,y,'Machine',[['Marque',it.machine.marque],['Type',it.machine.type],['Numéro',it.machine.numero]]);
+  const yb=kv(M+colW+8,y,'Peson',[['Type',it.peson.type],['Version écran',it.peson.versionEcran],['Version CPU',it.peson.versionCpu]]);
+  y=Math.max(ya,yb)+7;
+  if(hasReglages(it.reglages)){
+    const R=it.reglages, v=x=> x ? pdfTxt(String(x).replace('.',',')) : '-';
+    const V=R.vide||{}, F=R.ref3||{};
+    need(52);
+    const info=pdfTxt([R.outil?`Outil ${R.outil}`:'', R.mode?`Mode statique ${R.mode}`:'', R.fhp?`Max dyn HP ${v(R.fhp)} %`:'', R.fbp?`Max dyn BP ${v(R.fbp)} bar`:''].filter(Boolean).join('  ·  '));
+    font(11.5,'bold',NOIR); const tw=pdf.getTextWidth('RÉGLAGES PESON'); font(9,'normal',GRIS); const iw=pdf.getTextWidth(info);
+    if(info && tw+iw+8<=CW){ titre('Réglages peson'); font(9,'normal',GRIS); pdf.text(info, M+CW, y-6.4, {align:'right'}); }
+    else { titre('Réglages peson'); if(info){ font(9,'normal',GRIS); pdf.splitTextToSize(info,CW).forEach(l=>{ pdf.text(l,M,y); y+=4.6; }); y+=1.5; } }
+    const c0=30, cw=(CW-c0)/6, yt=y;
+    // en-tête niveau 1 : À vide / Réf 3
+    pdf.setFillColor(...NOIR); pdf.rect(M,y,CW,RH,'F');
+    font(9.5,'bold',OR); pdf.text(pdfTxt(`À VIDE  -  offset ${v(V.offset)} t`), M+c0+cw*1.5, y+4.1, {align:'center'}); pdf.text(pdfTxt(`RÉF 3  -  charge ${v(F.charge)} t`), M+c0+cw*4.5, y+4.1, {align:'center'}); y+=RH;
+    // en-tête niveau 2
+    pdf.setFillColor(55,55,55); pdf.rect(M,y,CW,RH,'F'); font(8.5,'bold',[255,255,255]);
+    ['Temps (s)','HP (bar)','BP (bar)','Temps (s)','HP (bar)','BP (bar)'].forEach((h,i)=> pdf.text(h, M+c0+cw*i+cw/2, y+4.1, {align:'center'})); y+=RH;
+    RG_ROWS.forEach(([k],i)=>{ if(i%2===1){ pdf.setFillColor(244,244,244); pdf.rect(M,y,CW,RH,'F'); }
+      font(9.5,'bold',NOIR); pdf.text(k==='stat'?'Statique':`Dynamique ${k.slice(1)}`, M+2.5, y+4.1);
+      font(10,'normal',TXT); [V,F].forEach((B,bi)=> ['sec','hp','bp'].forEach((c,j)=> pdf.text(v(B[k]&&B[k][c]), M+c0+cw*(bi*3+j)+cw/2, y+4.1, {align:'center'}))); y+=RH; });
+    pdf.setDrawColor(210,210,210); pdf.setLineWidth(0.2); pdf.rect(M,yt,CW,y-yt);
+    pdf.setDrawColor(...OR); pdf.setLineWidth(0.5); pdf.line(M+c0+cw*3, yt, M+c0+cw*3, y); y+=7;
+  }
+  titre('Panne / demande constatée'); para(it.panne);
+  titre('Travaux réalisés'); para(it.travaux);
+  const pieces=it.lines.filter(l=>l.cat==='pieces'||l.cat==='divers');
+  if(pieces.length){
+    titre('Pièces et fournitures');
+    const cx=[M, M+34, M+CW-18], hdr=()=>{ pdf.setFillColor(...NOIR); pdf.rect(M,y,CW,7,'F'); font(9.5,'bold',[255,255,255]); pdf.text('Réf.',cx[0]+2,y+4.8); pdf.text('Désignation',cx[1]+2,y+4.8); pdf.text('Qté',M+CW-2,y+4.8,{align:'right'}); y+=7; };
+    need(16); hdr();
+    pieces.forEach((l,i)=>{ const d=pdf.splitTextToSize(pdfTxt(l.desc),CW-34-22); const h=Math.max(7,d.length*4.6+2.6); if(y+h>BOTTOM){ pdf.addPage(); headerSuite(); hdr(); }
+      if(i%2===1){ pdf.setFillColor(244,244,244); pdf.rect(M,y,CW,h,'F'); }
+      font(9.5,'normal',TXT); pdf.text(pdfTxt(l.ref),cx[0]+2,y+4.8,{maxWidth:30}); pdf.text(d,cx[1]+2,y+4.8); pdf.text(String(l.qty).replace('.',',')+(l.unit&&l.unit!=='unité'?' '+pdfTxt(l.unit):''),M+CW-2,y+4.8,{align:'right'}); y+=h; });
+    y+=5;
+  }
+  if(it.observations){ titre('Observations / recommandations'); para(it.observations); }
+  // Signatures
+  // Validation (bloc compact, gardé en un seul morceau)
+  need(31); pdf.setDrawColor(...OR); pdf.setLineWidth(0.5); pdf.line(M,y,M+CW,y);
+  const sy=y+5, cx2=M+colW+8;
+  font(8.5,'bold',GRIS); pdf.text('LE TECHNICIEN',M,sy); pdf.text('LE CLIENT - BON POUR ACCORD',cx2,sy);
+  font(10.5,'bold',NOIR); pdf.text(pdfTxt(s.tech),M,sy+5.5); pdf.text(pdfTxt(it.signataire||'-'),cx2,sy+5.5);
+  font(9,'normal',GRIS); pdf.text(pdfTxt(s.seller.name),M,sy+10.5,{maxWidth:colW});
+  if(it.signature){ const sr=it.sigRatio||0.4, sh=Math.min(18,70*sr), sw=sh/sr; pdf.addImage(it.signature,'JPEG',cx2,sy+7.5,sw,sh);
+    font(8.5,'normal',GRIS); pdf.text(pdfTxt(`Signé sur place le ${fmtDate((it.signeLe||'').slice(0,10))} à ${new Date(it.signeLe||Date.now()).toTimeString().slice(0,5)}`),M,sy+16); }
+  else { font(9.5,'normal',GRIS); pdf.text('Non signé (client absent)',cx2,sy+12); }
+  // Pieds de page
+  const n=pdf.getNumberOfPages();
+  for(let p=1;p<=n;p++){ pdf.setPage(p); pdf.setDrawColor(...OR); pdf.setLineWidth(0.4); pdf.line(M,284,W-M,284); font(8,'normal',GRIS);
+    pdf.text(pdfTxt(`TechSO Consult · Entreprise individuelle · SIRET ${s.seller.siret}`),M,288.5); pdf.text(`Page ${p}/${n}`,W-M,288.5,{align:'right'}); }
+  const name=`Rapport_intervention_${it.date}_${slug(it.client.name)}.pdf`;
+  return new File([pdf.output('blob')], name, {type:'application/pdf'});
+}
+function dureeMinOf(it){ if(!it.hDebut||!it.hFin) return 0; const [a,b]=it.hDebut.split(':').map(Number),[c,d]=it.hFin.split(':').map(Number); let m=(c*60+d)-(a*60+b); if(m<0)m+=1440; return m; }
+
+/* ================= ENVOI (menu de partage Android → Gmail / Outlook…) ================= */
+async function shareFiles(files, title, text){
+  if(navigator.canShare && navigator.canShare({files})){
+    try{ await navigator.share({files, title, text}); return true; }
+    catch(e){ if(e.name==='AbortError'){ toast('Envoi annulé : rien n\'est marqué comme envoyé.'); return false; } throw e; }
+  }
+  // Repli : téléchargement des fichiers (à joindre au mail à la main)
+  files.forEach(f=>{ const a=document.createElement('a'); a.href=URL.createObjectURL(f); a.download=f.name; document.body.appendChild(a); a.click(); setTimeout(()=>{URL.revokeObjectURL(a.href); a.remove();},4000); });
+  return confirm('Partage direct indisponible : les fichiers ont été téléchargés. Les marquer comme envoyés ?');
+}
+
+/* ================= ASSISTANCE TÉLÉPHONIQUE ================= */
+let curAppel=null;
+function openAppel(id){
+  const list=load(KEYS.appels,[]); const s=getSettings();
+  curAppel = id ? JSON.parse(JSON.stringify(list.find(x=>x.id===id))) : { id:uid(), date:nowLocal(), dureeMin:'', appelant:'', objet:'', tarifAnnonce:'', accepteePar:'', prix:s.assist.pu, client:{}, statut:'a_facturer' };
+  setClient('a', curAppel.client);
+  $('#a_date').value=curAppel.date; $('#a_duree').value=curAppel.dureeMin; $('#a_appelant').value=curAppel.appelant; $('#a_objet').value=curAppel.objet;
+  $('#a_tarif').value=curAppel.tarifAnnonce; $('#a_accepte').value=curAppel.accepteePar; $('#a_prix').value=curAppel.prix;
+  $('#a_delete').style.display = id ? '' : 'none';
+  warnAppel(); show('appel', id ? 'appels':'home');
+}
+function warnAppel(){ const v=$('#a_tarif').value; $('#a_warn').innerHTML = v==='non' ? '<div class="alert rouge">⚠️ Tarif non annoncé : la facture risque d\'être contestée ou de rester impayée.</div>' : v==='' ? '<div class="alert">📌 Indique si le tarif a été annoncé avant le dépannage.</div>' : ''; }
+$('#a_tarif').addEventListener('change', warnAppel);
+$('#a_cancel').onclick=()=> show(backTo);
+$('#a_delete').onclick=()=>{ if(!confirm('Supprimer cet appel ?')) return; save(KEYS.appels, load(KEYS.appels,[]).filter(x=>x.id!==curAppel.id)); show('appels'); };
+$('#a_save').onclick=()=>{
+  curAppel.client=getClient('a');
+  Object.assign(curAppel,{ date:$('#a_date').value, dureeMin:$('#a_duree').value, appelant:$('#a_appelant').value.trim(), objet:$('#a_objet').value.trim(), tarifAnnonce:$('#a_tarif').value, accepteePar:$('#a_accepte').value.trim(), prix:num($('#a_prix').value) });
+  if(!curAppel.client.name){ toast('Il manque le client qui paiera.'); return; }
+  if(!curAppel.date){ toast('Il manque la date.'); return; }
+  const list=load(KEYS.appels,[]); const i=list.findIndex(x=>x.id===curAppel.id); if(i>=0) list[i]=curAppel; else list.unshift(curAppel);
+  if(save(KEYS.appels,list)){ rememberClient(curAppel.client); toast('Appel enregistré.'); show('appels'); }
+};
+function appelDesc(a){
+  const [d,t]=(a.date||'').split('T');
+  return `Assistance téléphonique du ${fmtDate(d)}${t?' à '+t.replace(':','h'):''}`+(a.dureeMin?` (${a.dureeMin} min)`:'')+(a.appelant?` - demandeur : ${a.appelant}`:'')+(a.objet?` - ${a.objet}`:'');
+}
+function renderAppels(){
+  const list=load(KEYS.appels,[]);
+  const todo=list.filter(a=>a.statut!=='facture'), done=list.filter(a=>a.statut==='facture');
+  const groups={}; todo.forEach(a=>{ const k=(a.client.name||'').trim(); (groups[k]=groups[k]||[]).push(a); });
+  $('#appelsGroups').innerHTML = Object.keys(groups).length ? Object.entries(groups).map(([k,arr],gi)=>`
+    <div class="card"><h2>${esc(k)}</h2>
+      ${arr.map(a=>`<div class="list-item" data-id="${a.id}"><div class="l"><b>${fmtDate(a.date)} ${(a.date.split('T')[1]||'').replace(':','h')} · ${esc(a.dureeMin||'?')} min</b><span class="muted">${esc(a.appelant||'')} ${a.tarifAnnonce==='oui'?'':'· <span class="badge warn">tarif non annoncé</span>'}</span></div><span>${fmtEUR(a.prix)}</span></div>`).join('')}
+      <button class="btn-or btn-block" style="margin-top:10px" data-g="${gi}">Préparer le brouillon de facture (${fmtEUR(arr.reduce((s,a)=>s+num(a.prix),0))})</button>
+    </div>`).join('') : '<div class="card"><p class="muted">Aucun appel à facturer.</p></div>';
+  const keys=Object.keys(groups);
+  $$('#appelsGroups [data-g]').forEach(b=> b.onclick=()=> facturerAppels(groups[keys[+b.dataset.g]]));
+  $$('#appelsGroups .list-item').forEach(d=> d.onclick=()=> openAppel(d.dataset.id));
+  $('#appelsDone').innerHTML = done.length ? done.slice(0,40).map(a=>`<div class="list-item"><div class="l"><b>${esc(a.client.name)}</b><span class="muted">${fmtDate(a.date)} · brouillon envoyé le ${fmtDate(a.factureLe)}</span></div><span class="badge gris">${fmtEUR(a.prix)}</span></div>`).join('') : '<p class="muted">Aucun.</p>';
+}
+async function facturerAppels(arr){
+  if(!sellerReady()){ toast('Réglages → charge d\'abord le bloc émetteur.'); return; }
+  const s=getSettings(); const c=arr[0].client;
+  if(arr.some(a=>a.tarifAnnonce!=='oui') && !confirm('Au moins un appel sans tarif annoncé. Préparer la facture quand même ?')) return;
+  const sorted=[...arr].sort((a,b)=>a.date.localeCompare(b.date));
+  const lines=sorted.map(a=>({ ref:s.assist.ref, desc:appelDesc(a), unit:'appel', cat:'presta', qty:1, pu:num(a.prix) }));
+  const acc=[...new Set(sorted.map(a=>a.accepteePar).filter(Boolean))].join(', ');
+  const d=docsProDraft('facture', c, { service:sorted[0].date.slice(0,10), ref:'Assistance téléphonique', notes:'Dépannage à distance par téléphone.'+(acc?` Prestation acceptée par : ${acc}.`:'') }, lines,
+    { appels:sorted.map(a=>({id:a.id, date:a.date, dureeMin:a.dureeMin, appelant:a.appelant, tarifAnnonce:a.tarifAnnonce, accepteePar:a.accepteePar})) });
+  const f=jsonFile(d,'FA',c.name);
+  try{
+    const ok=await shareFiles([f], `Brouillon facture assistance - ${c.name}`, `Brouillon de facture à importer dans Docs Pro (Historique → Importer). Le numéro FA sera attribué à la sauvegarde.`);
+    if(ok){ const all=load(KEYS.appels,[]); const ids=new Set(arr.map(a=>a.id)); const now=new Date().toISOString(); all.forEach(a=>{ if(ids.has(a.id)){ a.statut='facture'; a.factureLe=now; a.fichier=f.name; } }); save(KEYS.appels,all); renderAppels(); toast('✅ Brouillon de facture transmis.'); }
+  }catch(e){ console.error(e); toast('Erreur : '+(e.message||e)); }
+}
+
+/* ================= RÉGLAGES ================= */
+const RS = ['name','mail','tel','addr','siret','rib','penalties','micro'];
+function renderReglages(){
+  const s=getSettings();
+  RS.forEach(k=> $('#r_s_'+k).value = s.seller[k]||'');
+  $('#r_tech').value=s.tech;
+  $('#r_mo_ref').value=s.mo.ref; $('#r_mo_unit').value=s.mo.unit; $('#r_mo_pu').value=s.mo.pu; $('#r_mo_desc').value=s.mo.desc;
+  $('#r_dep_ref').value=s.dep.ref; $('#r_dep_unit').value=s.dep.unit; $('#r_dep_pu').value=s.dep.pu; $('#r_dep_desc').value=s.dep.desc;
+  $('#r_as_ref').value=s.assist.ref; $('#r_as_pu').value=s.assist.pu;
+  const nc=load(KEYS.clients,[]), na=load(KEYS.articles,[]);
+  $('#r_listesInfo').textContent = `${nc.length} client(s) dont ${nc.filter(c=>c.manuel).length} saisi(s) à la main · ${na.length} article(s).`;
+  majPersist();
+}
+async function majPersist(){
+  let t='';
+  try{ if(navigator.storage&&navigator.storage.persisted){ t = (await navigator.storage.persisted()) ? '✅ Stockage protégé contre l\'effacement automatique.' : '⚠️ Stockage non protégé : envoie régulièrement une sauvegarde.'; } }catch(e){}
+  $('#r_persist').textContent = t+' Les interventions non envoyées n\'existent que sur ce téléphone.';
+}
+$('#r_save').onclick=()=>{
+  const s=getSettings();
+  RS.forEach(k=> s.seller[k]=$('#r_s_'+k).value);
+  s.tech=$('#r_tech').value.trim();
+  s.mo={ ref:$('#r_mo_ref').value.trim(), unit:$('#r_mo_unit').value.trim(), pu:num($('#r_mo_pu').value), desc:$('#r_mo_desc').value.trim() };
+  s.dep={ ref:$('#r_dep_ref').value.trim(), unit:$('#r_dep_unit').value.trim(), pu:num($('#r_dep_pu').value), desc:$('#r_dep_desc').value.trim() };
+  s.assist={ ref:$('#r_as_ref').value.trim(), pu:num($('#r_as_pu').value) };
+  if(save(KEYS.settings,s)) toast('Réglages enregistrés.');
+};
+$('#r_impClients').onclick=()=> $('#r_fileClients').click();
+$('#r_impArticles').onclick=()=> $('#r_fileArticles').click();
+$('#r_fileClients').onchange=async e=>{
+  const f=e.target.files[0]; if(!f) return;
+  const list=mapClients(parseCSVSmart(decodeBytes(await readFile(f))));
+  if(!list.length){ toast('Aucun client lu dans ce fichier.'); return; }
+  const manuels=load(KEYS.clients,[]).filter(c=>c.manuel && !list.some(x=>stripAcc(x.name).toLowerCase()===stripAcc(c.name).toLowerCase()));
+  save(KEYS.clients,[...list,...manuels]); toast(`${list.length} clients importés (+${manuels.length} saisis à la main conservés).`); renderReglages(); e.target.value='';
+};
+$('#r_fileArticles').onchange=async e=>{
+  const f=e.target.files[0]; if(!f) return;
+  const list=mapArticles(parseCSVSmart(decodeBytes(await readFile(f))));
+  if(!list.length){ toast('Aucun article lu dans ce fichier.'); return; }
+  save(KEYS.articles,list); toast(`${list.length} articles importés.`); renderReglages(); e.target.value='';
+};
+$('#r_impSeller').onclick=()=> $('#r_fileSeller').click();
+$('#r_fileSeller').onchange=async e=>{
+  const f=e.target.files[0]; if(!f) return;
+  try{
+    const d=JSON.parse(decodeBytes(await readFile(f)));
+    const sel=d.seller; if(!sel||!sel.name) throw new Error('pas de bloc émetteur');
+    const s=getSettings(); RS.forEach(k=> s.seller[k]=sel[k]||''); s.seller.vat='franchise';
+    if(d.reglages){ ['tech','mo','dep','assist'].forEach(k=>{ if(d.reglages[k]) s[k]= typeof d.reglages[k]==='object' ? {...s[k],...d.reglages[k]} : d.reglages[k]; }); }
+    save(KEYS.settings,s); renderReglages(); toast('Bloc émetteur chargé. Vérifie puis « Enregistrer ».');
+  }catch(err){ toast('Fichier non reconnu : '+err.message); }
+  e.target.value='';
+};
+$('#r_backup').onclick=async()=>{
+  const all={ type:'sauvegarde-techso-terrain', version:APP_VERSION, date:new Date().toISOString() };
+  Object.entries(KEYS).forEach(([k,key])=> all[k]=load(key,null));
+  const f=new File([JSON.stringify(all)], `Sauvegarde_TechSO_Terrain_${stamp()}.txt`, {type:'text/plain'});
+  try{ if(await shareFiles([f],'Sauvegarde TechSO Terrain','Sauvegarde complète de l\'appli terrain (à garder sur le PC).')) toast('Sauvegarde transmise.'); }catch(e){ toast('Erreur : '+e.message); }
+};
+$('#r_restore').onclick=()=> $('#r_fileRestore').click();
+$('#r_fileRestore').onchange=async e=>{
+  const f=e.target.files[0]; if(!f) return;
+  try{
+    const d=JSON.parse(decodeBytes(await readFile(f)));
+    if(d.type!=='sauvegarde-techso-terrain') throw new Error('ce n\'est pas une sauvegarde TechSO Terrain');
+    if(!confirm(`Remplacer toutes les données du téléphone par la sauvegarde du ${fmtDate(d.date)} ?`)) return;
+    Object.entries(KEYS).forEach(([k,key])=>{ if(d[k]!=null) save(key,d[k]); });
+    toast('Sauvegarde restaurée.'); renderReglages();
+  }catch(err){ toast('Restauration impossible : '+err.message); }
+  e.target.value='';
+};
+
+/* ================= DÉMARRAGE ================= */
+document.addEventListener('visibilitychange', ()=>{ if(document.hidden && current==='inter') saveInter(true); });
+try{ if(navigator.storage && navigator.storage.persist) navigator.storage.persist(); }catch(e){}
+if('serviceWorker' in navigator && location.protocol==='https:') navigator.serviceWorker.register('sw.js').catch(()=>{});
+show('home');
+</script>
+</body>
+</html>
