@@ -93,7 +93,7 @@ button{font:inherit;border-radius:12px;border:0;padding:13px 16px;cursor:pointer
   <button class="home-btn" id="goHisto"><span class="ico">📋</span><span>Interventions <span id="bInter"></span><small>Brouillons, à envoyer, envoyées</small></span></button>
   <button class="home-btn" id="goAppels"><span class="ico">💶</span><span>Appels à facturer <span id="bAppels"></span><small>Préparer les brouillons de facture</small></span></button>
   <button class="home-btn" id="goReglages"><span class="ico">⚙️</span><span>Réglages<small>Émetteur, tarifs, listes clients et articles</small></span></button>
-  <p class="muted" style="text-align:center">TechSO Terrain v1.0 — données stockées sur ce téléphone uniquement.<br>Aucun numéro de BI ni de facture n'est créé ici : Docs Pro numérote à la sauvegarde.</p>
+  <p class="muted" style="text-align:center">TechSO Terrain v1.1 — données stockées sur cet appareil uniquement.<br>Aucun numéro de BI ni de facture n'est créé ici : Docs Pro numérote à la sauvegarde.</p>
 </section>
 
 <!-- ============ INTERVENTION ============ -->
@@ -294,7 +294,8 @@ button{font:inherit;border-radius:12px;border:0;padding:13px 16px;cursor:pointer
 /* ================= OUTILS ================= */
 const $ = (q, el=document) => el.querySelector(q);
 const $$ = (q, el=document) => Array.from(el.querySelectorAll(q));
-const APP_VERSION = 'TechSO Terrain v1.0';
+const APP_VERSION = 'TechSO Terrain v1.1';
+const IS_MOBILE = /Android|iPhone|iPad|Mobile/i.test(navigator.userAgent);
 const z = n => String(n).padStart(2,'0');
 const todayStr = () => { const d=new Date(); return d.getFullYear()+'-'+z(d.getMonth()+1)+'-'+z(d.getDate()); };
 const nowLocal = () => { const d=new Date(); return todayStr()+'T'+z(d.getHours())+':'+z(d.getMinutes()); };
@@ -735,13 +736,15 @@ function dureeMinOf(it){ if(!it.hDebut||!it.hFin) return 0; const [a,b]=it.hDebu
 
 /* ================= ENVOI (menu de partage Android → Gmail / Outlook…) ================= */
 async function shareFiles(files, title, text){
-  if(navigator.canShare && navigator.canShare({files})){
+  if(IS_MOBILE && navigator.canShare && navigator.canShare({files})){
     try{ await navigator.share({files, title, text}); return true; }
     catch(e){ if(e.name==='AbortError'){ toast('Envoi annulé : rien n\'est marqué comme envoyé.'); return false; } throw e; }
   }
   // Repli : téléchargement des fichiers (à joindre au mail à la main)
   files.forEach(f=>{ const a=document.createElement('a'); a.href=URL.createObjectURL(f); a.download=f.name; document.body.appendChild(a); a.click(); setTimeout(()=>{URL.revokeObjectURL(a.href); a.remove();},4000); });
-  return confirm('Partage direct indisponible : les fichiers ont été téléchargés. Les marquer comme envoyés ?');
+  return confirm(IS_MOBILE
+    ? 'Partage direct indisponible : les fichiers ont été téléchargés. Les marquer comme envoyés ?'
+    : 'Fichier(s) enregistré(s) dans Téléchargements : importe-les dans Docs Pro (Historique → Importer).\n\nLes marquer comme envoyés ?');
 }
 
 /* ================= ASSISTANCE TÉLÉPHONIQUE ================= */
