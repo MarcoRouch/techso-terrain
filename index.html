@@ -93,7 +93,7 @@ button{font:inherit;border-radius:12px;border:0;padding:13px 16px;cursor:pointer
   <button class="home-btn" id="goHisto"><span class="ico">📋</span><span>Interventions <span id="bInter"></span><small>Brouillons, à envoyer, envoyées</small></span></button>
   <button class="home-btn" id="goAppels"><span class="ico">💶</span><span>Appels à facturer <span id="bAppels"></span><small>Préparer les brouillons de facture</small></span></button>
   <button class="home-btn" id="goReglages"><span class="ico">⚙️</span><span>Réglages<small>Émetteur, tarifs, listes clients et articles</small></span></button>
-  <p class="muted" style="text-align:center">TechSO Terrain v1.3 — données stockées sur cet appareil uniquement.<br>Aucun numéro de BI ni de facture n'est créé ici : Docs Pro numérote à la sauvegarde.</p>
+  <p class="muted" style="text-align:center">TechSO Terrain v1.5 — données stockées sur cet appareil uniquement.<br>Aucun numéro de BI ni de facture n'est créé ici : Docs Pro numérote à la sauvegarde.</p>
 </section>
 
 <!-- ============ INTERVENTION ============ -->
@@ -115,7 +115,8 @@ button{font:inherit;border-radius:12px;border:0;padding:13px 16px;cursor:pointer
   </div>
   <div class="card">
     <h2>Machine</h2>
-    <label><span>Marque</span><input id="i_m_marque"></label>
+    <label><span>Marque</span><select id="i_m_marque_sel"></select></label>
+    <label id="i_m_marque_autre" style="display:none"><span>Autre marque</span><input id="i_m_marque"></label>
     <div class="row2">
       <label><span>Type</span><input id="i_m_type"></label>
       <label><span>Numéro</span><input id="i_m_numero"></label>
@@ -289,7 +290,7 @@ button{font:inherit;border-radius:12px;border:0;padding:13px 16px;cursor:pointer
 /* ================= OUTILS ================= */
 const $ = (q, el=document) => el.querySelector(q);
 const $$ = (q, el=document) => Array.from(el.querySelectorAll(q));
-const APP_VERSION = 'TechSO Terrain v1.3';
+const APP_VERSION = 'TechSO Terrain v1.5';
 const IS_MOBILE = /Android|iPhone|iPad|Mobile/i.test(navigator.userAgent);
 const z = n => String(n).padStart(2,'0');
 const todayStr = () => { const d=new Date(); return d.getFullYear()+'-'+z(d.getMonth()+1)+'-'+z(d.getDate()); };
@@ -456,7 +457,7 @@ function openInter(id){
   cur = id ? JSON.parse(JSON.stringify(list.find(x=>x.id===id))) : newInter();
   setClient('i', cur.client);
   for(const [k,el] of Object.entries(IFIELDS)) $('#'+el).value = cur[k]||'';
-  $('#i_m_marque').value=cur.machine.marque; $('#i_m_type').value=cur.machine.type; $('#i_m_numero').value=cur.machine.numero;
+  setMarque(cur.machine.marque); $('#i_m_type').value=cur.machine.type; $('#i_m_numero').value=cur.machine.numero;
   $('#i_p_type').value=cur.peson.type; $('#i_p_ecran').value=cur.peson.versionEcran; $('#i_p_cpu').value=cur.peson.versionCpu;
   writeReglages(cur.reglages);
   renderLines(); renderSig(); majDuree(); applyLock();
@@ -465,7 +466,7 @@ function openInter(id){
 function readInterForm(){
   cur.client = getClient('i');
   for(const [k,el] of Object.entries(IFIELDS)) cur[k] = $('#'+el).value.trim();
-  cur.machine = { marque:$('#i_m_marque').value.trim(), type:$('#i_m_type').value.trim(), numero:$('#i_m_numero').value.trim() };
+  cur.machine = { marque:getMarque(), type:$('#i_m_type').value.trim(), numero:$('#i_m_numero').value.trim() };
   cur.peson = { type:$('#i_p_type').value.trim(), versionEcran:$('#i_p_ecran').value.trim(), versionCpu:$('#i_p_cpu').value.trim() };
   cur.reglages = readReglages();
 }
@@ -512,6 +513,15 @@ const filled = o => !!o && JSON.stringify(o).replace(/"[a-z0-9]+":/g,'').replace
 const hasReglages = filled;
 /* À vide obligatoire dès qu'on saisit des réglages : les 15 valeurs + l'offset */
 function videIncomplet(r){ if(!filled(r)) return false; const V=r.vide||{}; return !V.offset || RG_ROWS.some(([k])=> ['sec','hp','bp'].some(c=> !(V[k]&&V[k][c]))); }
+
+/* Marques de chargeuses */
+const MARQUES = ['Caterpillar','Volvo','Komatsu','Liebherr','Hitachi','JCB','Hyundai','Doosan','John Deere','Case'];
+const MARQUES_ANCIENNES = {'Caterpillar (CAT)':'Caterpillar','Volvo Construction Equipment':'Volvo','Hitachi Construction Machinery':'Hitachi','Hyundai Construction Equipment':'Hyundai','Develon (ex-Doosan)':'Doosan','Case Construction':'Case'};
+$('#i_m_marque_sel').innerHTML = '<option value="">—</option>'+MARQUES.map(m=>`<option>${m}</option>`).join('')+'<option value="__autre">Autre…</option>';
+const majMarqueAutre = () => $('#i_m_marque_autre').style.display = $('#i_m_marque_sel').value==='__autre' ? '' : 'none';
+$('#i_m_marque_sel').addEventListener('change', ()=>{ majMarqueAutre(); if($('#i_m_marque_sel').value==='__autre') $('#i_m_marque').focus(); });
+function setMarque(v){ v=MARQUES_ANCIENNES[v]||v||''; if(!v){ $('#i_m_marque_sel').value=''; $('#i_m_marque').value=''; } else if(MARQUES.includes(v)){ $('#i_m_marque_sel').value=v; $('#i_m_marque').value=''; } else { $('#i_m_marque_sel').value='__autre'; $('#i_m_marque').value=v; } majMarqueAutre(); }
+function getMarque(){ const v=$('#i_m_marque_sel').value; return v==='__autre' ? $('#i_m_marque').value.trim() : v; }
 
 /* Lignes */
 const CATS = {pieces:'Pièces détachées', presta:'Prestation', dep:'Frais de déplacement', divers:'Divers'};
@@ -714,7 +724,7 @@ function makeReportPDF(it){
   const y1=bloc(M,y,'Client',cl), y2=bloc(M+colW+8,y,'Lieu / référence',li); y=Math.max(y1,y2)+2;
   // Machine et peson (tableaux clé/valeur)
   const kv=(x,yy,head,rows)=>{ pdf.setFillColor(...NOIR); pdf.rect(x,yy,colW,RH,'F'); font(9.5,'bold',[255,255,255]); pdf.text(head.toUpperCase(),x+2.5,yy+4.1); yy+=RH;
-    rows.forEach((r,i)=>{ if(i%2===1){ pdf.setFillColor(244,244,244); pdf.rect(x,yy,colW,RH,'F'); } font(9.5,'normal',GRIS); pdf.text(r[0],x+2.5,yy+4.1); font(10,'bold',TXT); pdf.text(pdfTxt(r[1]||'-'),x+32,yy+4.1,{maxWidth:colW-34}); yy+=RH; });
+    rows.forEach((r,i)=>{ if(i%2===1){ pdf.setFillColor(244,244,244); pdf.rect(x,yy,colW,RH,'F'); } font(9.5,'normal',GRIS); pdf.text(r[0],x+2.5,yy+4.1); { const t=pdfTxt(r[1]||'-'), mw=colW-34; let fs=10; font(fs,'bold',TXT); while(pdf.getTextWidth(t)>mw && fs>7.5){ fs-=0.5; font(fs,'bold',TXT); } pdf.text(pdf.getTextWidth(t)>mw ? pdf.splitTextToSize(t,mw)[0] : t, x+32, yy+4.1); } yy+=RH; });
     pdf.setDrawColor(210,210,210); pdf.setLineWidth(0.2); pdf.rect(x,yy-RH*rows.length-RH,colW,RH*rows.length+RH); return yy; };
   need(36);
   const ya=kv(M,y,'Machine',[['Marque',it.machine.marque],['Type',it.machine.type],['Numéro',it.machine.numero]]);
