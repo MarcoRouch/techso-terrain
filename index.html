@@ -93,7 +93,7 @@ button{font:inherit;border-radius:12px;border:0;padding:13px 16px;cursor:pointer
   <button class="home-btn" id="goHisto"><span class="ico">📋</span><span>Interventions <span id="bInter"></span><small>Brouillons, à envoyer, envoyées</small></span></button>
   <button class="home-btn" id="goAppels"><span class="ico">💶</span><span>Appels à facturer <span id="bAppels"></span><small>Préparer les brouillons de facture</small></span></button>
   <button class="home-btn" id="goReglages"><span class="ico">⚙️</span><span>Réglages<small>Émetteur, tarifs, listes clients et articles</small></span></button>
-  <p class="muted" style="text-align:center">TechSO Terrain v1.5 — données stockées sur cet appareil uniquement.<br>Aucun numéro de BI ni de facture n'est créé ici : Docs Pro numérote à la sauvegarde.</p>
+  <p class="muted" style="text-align:center">TechSO Terrain v1.7 — données stockées sur cet appareil uniquement.<br>Aucun numéro de BI ni de facture n'est créé ici : Docs Pro numérote à la sauvegarde.</p>
 </section>
 
 <!-- ============ INTERVENTION ============ -->
@@ -290,7 +290,7 @@ button{font:inherit;border-radius:12px;border:0;padding:13px 16px;cursor:pointer
 /* ================= OUTILS ================= */
 const $ = (q, el=document) => el.querySelector(q);
 const $$ = (q, el=document) => Array.from(el.querySelectorAll(q));
-const APP_VERSION = 'TechSO Terrain v1.5';
+const APP_VERSION = 'TechSO Terrain v1.7';
 const IS_MOBILE = /Android|iPhone|iPad|Mobile/i.test(navigator.userAgent);
 const z = n => String(n).padStart(2,'0');
 const todayStr = () => { const d=new Date(); return d.getFullYear()+'-'+z(d.getMonth()+1)+'-'+z(d.getDate()); };
@@ -639,7 +639,7 @@ $('#i_send').onclick = async ()=>{
     if(!cur.client.name){ toast('Il manque le nom du client.'); return; }
     if(!cur.date){ toast('Il manque la date.'); return; }
     if(!cur.travaux){ toast('Il manque les travaux réalisés.'); return; }
-    if(videIncomplet(cur.reglages)){ toast('Réglages peson : le bloc « À vide » est obligatoire (offset + 15 valeurs).',5000); $('#rg_vide_offset').scrollIntoView({block:'center'}); return; }
+    if(videIncomplet(cur.reglages) && !confirm('Réglages peson : le bloc « À vide » est incomplet (les cases vides s\'imprimeront « - »).\n\nEnvoyer quand même ?')){ $('#rg_vide_offset').scrollIntoView({block:'center'}); return; }
     if(!cur.signature && !confirm('Pas de signature client. Envoyer quand même ?')) return;
     saveInter(true);
   }
@@ -669,7 +669,7 @@ function docsProDraft(doctype, client, doc, lines, terrain){
     doctype, number:'',
     seller:{ ...s.seller, vat:'franchise' },
     client:{ name:client.name||'', attention:client.attention||'', addr:client.addr||'', ship:'', siret:client.siret||'', contact:client.contact||'', hideShip:'oui' },
-    doc:{ issue:todayStr(), service:doc.service||'', due:'', ref:doc.ref||'', po:'', vendor:'', notes:doc.notes||'', showCGV:'oui', factureOrigine:'' },
+    doc:{ issue:todayStr(), service:doc.service||'', due:'', ref:doc.ref||'', po:'', vendor:'', notes:doc.notes||'', showCGV: doctype==='facture' ? 'oui' : 'non', factureOrigine:'' },
     discount:{ pct:'0', amt:'0' },
     lines:L, totalHT:total, totalTVA:0, totalTTC:total,
     savedAt:new Date().toISOString(),
